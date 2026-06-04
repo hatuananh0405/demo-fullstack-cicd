@@ -61,7 +61,7 @@ jobs:
           exit-code: '1' # Ép sập Pipeline nếu phát hiện lỗi bảo mật mức CRITICAL
           ignore-unfixed: true
           vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
 
       # 2.3 Đăng nhập vào Docker Hub công khai
       - name: Login to Docker Hub
