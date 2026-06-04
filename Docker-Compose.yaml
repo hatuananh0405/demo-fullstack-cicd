@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:  
+  db:
+    image: mysql:8.0          # Tải bản sao môi trường MySQL bản 8.0 ổn định.
+    container_name: mysql_db  # Đặt tên cố định cho container để dễ quản lý, thay vì Docker tự sinh tên ngẫu nhiên.
+    restart: always           # Nếu container bị sập do lỗi hệ thống hoặc Docker bị restart, nó sẽ tự động chạy lại.
+    environment:              # Khai báo các biến môi trường cấu hình cho database ngay khi khởi tạo
+      MYSQL_ROOT_PASSWORD: rootpassword # Mật khẩu của tài khoản tối cao (root).
+      MYSQL_DATABASE: my_database       # Tự động tạo sẵn một database tên là 'my_database'.
+      MYSQL_USER: user                  # Tạo một user thường để app kết nối (an toàn hơn dùng root).
+      MYSQL_PASSWORD: userpassword      # Mật khẩu của user thường đó.
+    ports:
+      - "3306:3306"           # Bản đồ cổng: [Cổng máy thật] : [Cổng trong container]. 
+                              # Giúp bạn có thể dùng các tool như DBeaver, Navicat từ máy thật kết nối thẳng vào DB trong Docker qua cổng 3306.
+    volumes:
+      - db_data:/var/lib/mysql # Ánh xạ thư mục dữ liệu gốc của MySQL bên trong container ra một phân vùng ổ cứng (db_data) trên máy thật.
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+
+  # 2. Khởi tạo Backend (NodeJS)
+  backend:
+    build: ./backend          # Chỉ định đường dẫn chứa Dockerfile để Docker tự build thành Image riêng.
+    ports:
+      - "5000:5000"           # Mở cổng 5000 ra ngoài máy thật để Frontend hoặc Postman có thể gọi API.
+    environment:
+      DB_HOST: db             # ĐÂY LÀ ĐIỂM CHỐT: Thay vì điền IP, ta điền tên service 'db'. Docker tự hiểu là container MySQL.
+    volumes:
+      - ./backend:/app        # Đồng bộ (Bind mount) thư mục code máy thật vào container để sửa code là container nhận ngay.
+      - /app/node_modules     # Khai báo một Anonymous Volume. Ý nghĩa: Giữ lại thư mục node_modules tạo ra từ lệnh `RUN npm install` bên trong container Linux, không cho thư mục node_modules ở máy thật (nếu có) đè lên, tránh lỗi xung đột hệ điều hành (nhất là khi máy thật chạy Windows).
+    depends_on:
+      - db                    # Ra lệnh cho Docker: "Phải dựng container db xong xuôi thì mới được dựng container backend".
+    networks:
+      - app-network
+
+  # 3. Khởi tạo Frontend (ReactJS)
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"           # Mở cổng 3000 để bạn gõ 'localhost:3000' trên Chrome là vào được web.
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules     # Tác dụng tương tự như phần Backend (Tránh xung đột node_modules).
+    environment:
+      - CHOKIDAR_USEPOLLING=true # Cực kỳ quan trọng! Docker chạy trên một máy ảo Linux nền tảng. Đôi khi sự kiện lưu file (Save) từ Windows/MacOS không kích hoạt được tính năng tự tải lại trang của React trong Linux. Câu lệnh này ép React liên tục quét file (polling) để đảm bảo tính năng Hot-reload hoạt động mượt mà 100%.
+    depends_on:
+      - backend               # Đảm bảo có server API rồi mới mở giao diện.
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
