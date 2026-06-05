@@ -15,7 +15,7 @@ services:
                               # Giúp bạn có thể dùng các tool như DBeaver, Navicat từ máy thật kết nối thẳng vào DB trong Docker qua cổng 3306.
     volumes:
       - db_data:/var/lib/mysql # Ánh xạ thư mục dữ liệu gốc của MySQL bên trong container ra một phân vùng ổ cứng (db_data) trên máy thật.
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      
     networks:
       - app-network
 
