@@ -2,7 +2,8 @@ version: '3.8'
 
 services:  
   db:
-    image: mysql:8.0          # Tải bản sao môi trường MySQL bản 8.0 ổn định.
+    image: mysql:8.0 
+    build: ./database         # Tải bản sao môi trường MySQL bản 8.0 ổn định.
     container_name: mysql_db  # Đặt tên cố định cho container để dễ quản lý, thay vì Docker tự sinh tên ngẫu nhiên.
     restart: always           # Nếu container bị sập do lỗi hệ thống hoặc Docker bị restart, nó sẽ tự động chạy lại.
     environment:              # Khai báo các biến môi trường cấu hình cho database ngay khi khởi tạo
