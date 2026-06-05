@@ -40,7 +40,6 @@ function handleDisconnect() {
       console.log('🔌 Mất kết nối đột ngột, tiến hành kết nối lại...');
       handleDisconnect();
     }
-    // Chặn hoàn toàn việc gọi handleDisconnect() tại đây nếu gặp lỗi ECONNREFUSED lúc khởi động
   });
 }
 
