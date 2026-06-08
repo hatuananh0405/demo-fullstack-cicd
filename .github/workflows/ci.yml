@@ -81,6 +81,13 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/lab11-backend:${{ github.sha }}
 
       # 2.5 BẮN TÍN HIỆU WEBHOOK GỌI JENKINS CD CHẠY LIVE
+      # 2.5 BẮN TÍN HIỆU WEBHOOK GỌI JENKINS CD CHẠY LIVE (ĐÃ SỬA LỖI BẢO MẬT)
       - name: Trigger Jenkins CD Pipeline
+        env:
+          # Giấu chữ admin và token vào các biến môi trường ngầm của máy ảo
+          JENKINS_USER: "admin"
+          JENKINS_SECRET_TOKEN: ${{ secrets.JENKINS_TOKEN }}
+          JENKINS_TARGET_URL: ${{ secrets.JENKINS_URL }}
         run: |
-          curl -X POST -u "admin:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/pipeline-cd-distributed/build"
+          # Dùng biến môi trường để gọi, file YAML hoàn toàn sạch chữ thường
+          curl -X POST -u "$JENKINS_USER:$JENKINS_SECRET_TOKEN" "$JENKINS_TARGET_URL/job/pipeline-cd-distributed/build"
