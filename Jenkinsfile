@@ -5,7 +5,7 @@ pipeline {
         // -------------------------------------------------------------
         // STAGE 1: Giao cho ông Build Slave kéo code (Nhốt trong vùng an toàn)
         // -------------------------------------------------------------
-        stage('1. Checkout Source Code') {
+        stage('1. Checkout Source Code...') {
             agent { label 'build-slave' } // Ép chạy trên con container build-slave
             steps {
                 echo '📥 [BUILD-SLAVE] Đang tiến hành kéo mã nguồn mới nhất từ GitHub...'
