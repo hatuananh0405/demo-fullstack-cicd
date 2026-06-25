@@ -60,10 +60,10 @@ pipeline {
     // Phần hậu kỳ: Trả kết quả báo cáo ra màn hình Jenkins
     post {
         success {
-            echo '✅ Lượt build và deploy thành công tốt đẹp!'
+            echo 'Build và deploy thành công!'
         }
         failure {
-            echo '❌ Luồng chạy thất bại! Bạn hãy kiểm tra lại logs hệ thống ngay.'
+            echo '❌ Thất bại!'
         }
     }
 }
