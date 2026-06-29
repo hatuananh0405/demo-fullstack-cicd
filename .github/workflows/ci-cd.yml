@@ -34,17 +34,21 @@ jobs:
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/lab14-frontend:${{ github.sha }} ./frontend
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/lab14-frontend:${{ github.sha }}
 
-    # Bước 5: Cập nhật trực tiếp Deployment lớp ứng dụng vào cụm K8s nội bộ thông qua đặc quyền nội tại của ARC
+    # Bước 5: Cập nhật trực tiếp Deployment lớp ứng dụng vào cụm K8s
     - name: Deploy to Kubernetes Cluster
       run: |
-        # Script thực hiện thay đổi chuỗi 'DOCKERHUB_PLACEHOLDER' thành tên tài khoản thật kèm tag định danh commit thực tế
+        # 5.1 Tải và cài đặt kubectl nhanh trực tiếp vào bên trong Pod Runner
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x ./kubectl
+        
+        # 5.2 Thực hiện thay đổi chuỗi 'DOCKERHUB_PLACEHOLDER' thành tài khoản thật kèm commit SHA
         sed -i "s|DOCKERHUB_PLACEHOLDER/lab14-backend:latest|${{ secrets.DOCKERHUB_USERNAME }}/lab14-backend:${{ github.sha }}|g" k8s-manifests/backend.yaml
         sed -i "s|DOCKERHUB_PLACEHOLDER/lab14-frontend:latest|${{ secrets.DOCKERHUB_USERNAME }}/lab14-frontend:${{ github.sha }}|g" k8s-manifests/frontend.yaml
         
-        # Áp dụng các file cấu hình lớp layer dịch vụ mới
-        kubectl apply -f k8s-manifests/backend.yaml
-        kubectl apply -f k8s-manifests/frontend.yaml
+        # 5.3 Sử dụng file binary ./kubectl vừa tải để apply cấu hình mới vào cụm
+        ./kubectl apply -f k8s-manifests/backend.yaml
+        ./kubectl apply -f k8s-manifests/frontend.yaml
         
-        # Đợi cho K8s Node hoàn tất việc pull và dọn dẹp hạ tầng cũ, đảm bảo zero-downtime
-        kubectl rollout status deployment/backend-deployment
-        kubectl rollout status deployment/frontend-deployment
+        # Đợi các Deployment layer hoàn tất cập nhật trạng thái
+        ./kubectl rollout status deployment/backend-deployment
+        ./kubectl rollout status deployment/frontend-deployment
