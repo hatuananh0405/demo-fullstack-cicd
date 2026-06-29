@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: default
+spec:
+  ports:
+  - port: 5000
+    targetPort: 5000
+  selector:
+    app: backend-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-app
+  template:
+    metadata:
+      labels:
+        app: backend-app
+    spec:
+      containers:
+      - name: backend
+        # Tag image này sẽ được script sed trong file ci-cd.yml tự động thay bằng ${{ github.sha }} khi build
+        image: DOCKERHUB_PLACEHOLDER/lab14-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DB_HOST
+          value: "mysql-svc" # Gọi nội bộ K8s sang Headless Service của StatefulSet
+        - name: DB_USER
+          value: "user"
+        - name: DB_PASSWORD
+          value: "userpassword"
+        - name: DB_NAME
+          value: "my_database"
+        - name: PORT
+          value: "5000"

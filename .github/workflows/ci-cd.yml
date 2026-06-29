@@ -1,0 +1,49 @@
+name: Lab 14 Full GitOps Pipeline (ARC Mode)
+
+on:
+  push:
+    branches: [ "develop" ] # Chỉ kích hoạt khi bạn push code vào nhánh develop
+
+jobs:
+  build-and-deploy:
+    # Buộc job chạy biệt lập trên Pod Runner tự động sinh bởi ARC ngay trong cụm K8s On-Premises của bạn
+    runs-on: [self-hosted, kubernetes]
+
+    steps:
+    # Bước 1: Kéo (Clone) toàn bộ mã nguồn dự án từ GitHub vào workspace nội bộ của Pod Runner
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # Bước 2: Đăng nhập vào Docker Hub sử dụng Token bí mật lưu tại Repository Secrets
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # Bước 3: Đóng gói mã nguồn Backend bằng Docker-in-Docker (DinD) của Pod ARC và đẩy lên Hub
+    - name: Build and Push Backend Image
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/lab14-backend:${{ github.sha }} ./backend
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/lab14-backend:${{ github.sha }}
+
+    # Bước 4: Đóng gói mã nguồn Frontend bằng Docker-in-Docker (DinD) của Pod ARC và đẩy lên Hub
+    - name: Build and Push Frontend Image
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/lab14-frontend:${{ github.sha }} ./frontend
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/lab14-frontend:${{ github.sha }}
+
+    # Bước 5: Cập nhật trực tiếp Deployment lớp ứng dụng vào cụm K8s nội bộ thông qua đặc quyền nội tại của ARC
+    - name: Deploy to Kubernetes Cluster
+      run: |
+        # Script thực hiện thay đổi chuỗi 'DOCKERHUB_PLACEHOLDER' thành tên tài khoản thật kèm tag định danh commit thực tế
+        sed -i "s|DOCKERHUB_PLACEHOLDER/lab14-backend:latest|${{ secrets.DOCKERHUB_USERNAME }}/lab14-backend:${{ github.sha }}|g" k8s-manifests/backend.yaml
+        sed -i "s|DOCKERHUB_PLACEHOLDER/lab14-frontend:latest|${{ secrets.DOCKERHUB_USERNAME }}/lab14-frontend:${{ github.sha }}|g" k8s-manifests/frontend.yaml
+        
+        # Áp dụng các file cấu hình lớp layer dịch vụ mới
+        kubectl apply -f k8s-manifests/backend.yaml
+        kubectl apply -f k8s-manifests/frontend.yaml
+        
+        # Đợi cho K8s Node hoàn tất việc pull và dọn dẹp hạ tầng cũ, đảm bảo zero-downtime
+        kubectl rollout status deployment/backend-deployment
+        kubectl rollout status deployment/frontend-deployment
