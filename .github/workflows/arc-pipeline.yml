@@ -5,7 +5,7 @@ on:
     branches: [ "develop" ]
 
 env:
-  LOCAL_REGISTRY: "172.16.5.201:5000" # IP Local Registry của bạn
+  LOCAL_REGISTRY: "172.16.5.201:5000"
 
 jobs:
   build-and-deploy:
@@ -14,17 +14,16 @@ jobs:
     - name: Checkout Source Code
       uses: actions/checkout@v4
 
-    # 1. BẮT BUỘC KHỞI TẠO ĐỘNG CƠ BUILDX ĐỂ ĐIỀU PHỐI GIAO THỨC INSECURE HTTP
+    # KHỞI TẠO ĐỘNG CƠ BUILDX VÀ SỬA LỖI PROTOCOL HTTPS
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
-        driver-opts: |
-          image=moby/buildkit:master
-        # Ép Buildx Builder biết rằng IP này được quyền chạy HTTP thường
-        append-images: |
-          ${{ env.LOCAL_REGISTRY }}
+        driver: docker-container
+        config-inline: |
+          [registry."172.16.5.201:5000"]
+            http = true
+            insecure = true
 
-    # 2. BUILD VÀ PUSH CÁC LAYER BẰNG ACTIONS CHUYÊN DỤNG (TỰ ĐỘNG KHẮC PHỤC LỖI HTTPS)
     - name: Build and Push Backend Image
       uses: docker/build-push-action@v5
       with:
@@ -43,7 +42,6 @@ jobs:
           ${{ env.LOCAL_REGISTRY }}/lab11-frontend:${{ github.sha }}
           ${{ env.LOCAL_REGISTRY }}/lab11-frontend:development-latest
 
-    # 3. TRIỂN KHAI XUỐNG CỤM K8S LIVE
     - name: Apply Deployments to Kubernetes Cluster
       run: |
         kubectl apply -f k8s/01-db.yaml
