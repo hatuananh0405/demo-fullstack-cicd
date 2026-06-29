@@ -1,0 +1,44 @@
+name: Lab 14 ARC K8s Local Private Registry Pipeline
+
+on:
+  push:
+    branches: [ "develop" ]
+
+env:
+  LOCAL_REGISTRY: "172.16.5.201:5000" # ĐIỀN CHÍNH XÁC IP CỦA LOCAL REGISTRY BẠN VỪA LẤY Ở BƯỚC 1
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted # Đổ trực tiếp về Pod ARC của bạn
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    # KHÔNG CẦN DÙNG BƯỚC DOCKER LOGIN VÌ LOCAL REGISTRY CHẠY NỘI BỘ KHÔNG ĐẶT PASS
+
+    - name: Build & Push Backend Image to Local Registry
+      run: |
+        docker build -t ${{ env.LOCAL_REGISTRY }}/lab11-backend:${{ github.sha }} ./backend
+        docker tag ${{ env.LOCAL_REGISTRY }}/lab11-backend:${{ github.sha }} ${{ env.LOCAL_REGISTRY }}/lab11-backend:development-latest
+        docker push ${{ env.LOCAL_REGISTRY }}/lab11-backend:${{ github.sha }}
+        docker push ${{ env.LOCAL_REGISTRY }}/lab11-backend:development-latest
+
+    - name: Build & Push Frontend Image to Local Registry
+      run: |
+        docker build -t ${{ env.LOCAL_REGISTRY }}/lab11-frontend:${{ github.sha }} ./frontend
+        docker tag ${{ env.LOCAL_REGISTRY }}/lab11-frontend:${{ github.sha }} ${{ env.LOCAL_REGISTRY }}/lab11-frontend:development-latest
+        docker push ${{ env.LOCAL_REGISTRY }}/lab11-frontend:${{ github.sha }}
+        docker push ${{ env.LOCAL_REGISTRY }}/lab11-frontend:development-latest
+
+    - name: Apply Deployments to Kubernetes Cluster
+      run: |
+        kubectl apply -f k8s/01-db.yaml
+        kubectl apply -f k8s/02-backend.yaml
+        kubectl apply -f k8s/03-frontend.yaml
+        
+        # Inject trực tiếp địa chỉ Image nội bộ kèm mã commit SHA mới nhất
+        kubectl set image deployment/nodejs-deployment nodejs-api=${{ env.LOCAL_REGISTRY }}/lab11-backend:${{ github.sha }} -n lab14-app
+        kubectl set image deployment/frontend-deployment frontend-app=${{ env.LOCAL_REGISTRY }}/lab11-frontend:${{ github.sha }} -n lab14-app
+        
+        kubectl rollout status deployment/nodejs-deployment -n lab14-app --timeout=90s
+        kubectl rollout status deployment/frontend-deployment -n lab14-app --timeout=90s

@@ -15,7 +15,7 @@ pipeline {
         }
 
         // -------------------------------------------------------------
-        // STAGE 2: Giao cho ông Deploy Slave chuẩn bị môi trường Docker
+        // STAGE 2: Giao cho Deploy Slave chuẩn bị môi trường Docker
         // -------------------------------------------------------------
         stage('2. Pull Clean Image') {
             agent { label 'deploy-slave' } // Ép chuyển sang con container deploy-slave (có quyền Docker)
