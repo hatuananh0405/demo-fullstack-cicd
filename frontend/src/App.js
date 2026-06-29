@@ -8,7 +8,7 @@ function App() {
 
   useEffect(() => {
     // Gọi API tới Container Backend (qua port 5000 công khai ở máy local)
-    fetch('http://172.16.5.200/api')
+    fetch('http://172.16.5.200/api/users')
       .then(response => {
         if (!response.ok) throw new Error('Mạng có sự cố, không gọi được API');
         return response.json();
