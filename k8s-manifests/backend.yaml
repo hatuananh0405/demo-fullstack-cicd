@@ -22,19 +22,27 @@ spec:
       app: backend-app
   template:
     metadata:
+      # BỔ SUNG KHU VỰC ANNOTATIONS NÀY ĐỂ KÍCH HOẠT TRACING
+      annotations:
+        instrumentation.opentelemetry.io/inject-nodejs: "true"
       labels:
         app: backend-app
     spec:
+      # Giữ nguyên cấu hình vượt rào DiskPressure cho Pod ứng dụng (để an toàn trong máy Lab)
+      tolerations:
+        - key: "node.kubernetes.io/disk-pressure"
+          operator: "Exists"
+          effect: "NoSchedule"
       containers:
       - name: backend
-        # Tag image này sẽ được script sed trong file ci-cd.yml tự động thay bằng ${{ github.sha }} khi build
+        # Giữ nguyên placeholder để script CI/CD tự động convert sang thẻ SHA khi build
         image: DOCKERHUB_PLACEHOLDER/lab14-backend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: "mysql-svc" # Gọi nội bộ K8s sang Headless Service của StatefulSet
+          value: "mysql-svc"
         - name: DB_USER
           value: "user"
         - name: DB_PASSWORD
