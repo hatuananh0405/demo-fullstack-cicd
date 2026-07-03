@@ -1,4 +1,4 @@
-#lab15
+
 apiVersion: v1
 kind: Service
 metadata:
