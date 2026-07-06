@@ -22,9 +22,10 @@ spec:
       app: backend-app
   template:
     metadata:
-      # BỔ SUNG KHU VỰC ANNOTATIONS NÀY ĐỂ KÍCH HOẠT TRACING
+      
       annotations:
         instrumentation.opentelemetry.io/inject-nodejs: "true"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "3306"
       labels:
         app: backend-app
     spec:
