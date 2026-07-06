@@ -46,7 +46,7 @@ spec:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: "mysql-svc"
+          value: "192.168.254.140"
         - name: DB_USER
           value: "user"
         - name: DB_PASSWORD
