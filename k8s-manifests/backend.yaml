@@ -40,6 +40,8 @@ spec:
         imagePullPolicy: Always
         securityContext:
           privileged: true
+        command: ["node"]
+        args: ["src/index.js"]
         ports:
         - containerPort: 5000
         env:
