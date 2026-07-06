@@ -22,8 +22,6 @@ spec:
       app: frontend-app
   template:
     metadata:
-      annotations:
-        instrumentation.opentelemetry.io/inject-nodejs: "true"
       labels:
         app: frontend-app
     spec:
@@ -32,7 +30,5 @@ spec:
         # Tag image này cũng sẽ được cập nhật động theo mã commit sha nhằm chống kẹt cache của K8s Node
         image: DOCKERHUB_PLACEHOLDER/lab14-frontend:latest
         imagePullPolicy: Always
-        securityContext:
-          privileged: true
         ports:
         - containerPort: 3000
