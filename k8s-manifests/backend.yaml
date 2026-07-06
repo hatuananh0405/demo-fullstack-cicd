@@ -38,6 +38,8 @@ spec:
         # Giữ nguyên placeholder để script CI/CD tự động convert sang thẻ SHA khi build
         image: DOCKERHUB_PLACEHOLDER/lab14-backend:latest
         imagePullPolicy: Always
+        securityContext:
+          privileged: true
         ports:
         - containerPort: 5000
         env:
