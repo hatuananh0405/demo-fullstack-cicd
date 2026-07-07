@@ -38,6 +38,10 @@ spec:
         env:
         - name: OTEL_SERVICE_NAME
           value: "backend-app"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://tempo.monitoring.svc.cluster.local:4318"
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "http/protobuf"
         - name: DB_HOST
           value: "mysql-svc"
         - name: DB_USER
