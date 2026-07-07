@@ -22,21 +22,14 @@ spec:
       app: backend-app
   template:
     metadata:
-      
-      annotations:
-        instrumentation.opentelemetry.io/inject-nodejs: "true"
-        traffic.sidecar.istio.io/excludeOutboundPorts: "3306"
       labels:
         app: backend-app
+      # ⚠️ THÊM ĐOẠN ANNOTATION NÀY ĐỂ KÍCH HOẠT ĐO LƯỜNG TRACING TỰ ĐỘNG
+      annotations:
+        instrumentation.opentelemetry.io/inject-nodejs: "default/backend-autoinstrumentation"
     spec:
-      # Giữ nguyên cấu hình vượt rào DiskPressure cho Pod ứng dụng (để an toàn trong máy Lab)
-      tolerations:
-        - key: "node.kubernetes.io/disk-pressure"
-          operator: "Exists"
-          effect: "NoSchedule"
       containers:
       - name: backend
-        # Giữ nguyên placeholder để script CI/CD tự động convert sang thẻ SHA khi build
         image: DOCKERHUB_PLACEHOLDER/lab14-backend:latest
         imagePullPolicy: Always
         ports:
