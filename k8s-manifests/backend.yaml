@@ -26,6 +26,7 @@ spec:
         app: backend-app
       # ⚠️ THÊM ĐOẠN ANNOTATION NÀY ĐỂ KÍCH HOẠT ĐO LƯỜNG TRACING TỰ ĐỘNG
       annotations:
+        
         instrumentation.opentelemetry.io/inject-nodejs: "default/backend-autoinstrumentation"
     spec:
       containers:
@@ -35,6 +36,8 @@ spec:
         ports:
         - containerPort: 5000
         env:
+        - name: OTEL_SERVICE_NAME
+          value: "backend-app"
         - name: DB_HOST
           value: "mysql-svc"
         - name: DB_USER
