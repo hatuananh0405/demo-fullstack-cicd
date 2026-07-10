@@ -24,24 +24,28 @@ spec:
     metadata:
       labels:
         app: backend-app
-      # ⚠️ THÊM ĐOẠN ANNOTATION NÀY ĐỂ KÍCH HOẠT ĐO LƯỜNG TRACING TỰ ĐỘNG
       annotations:
-        
+        # Kích hoạt bộ tiêm tự động OpenTelemetry Node.js
         instrumentation.opentelemetry.io/inject-nodejs: "default/backend-autoinstrumentation"
     spec:
       containers:
       - name: backend
         image: DOCKERHUB_PLACEHOLDER/lab14-backend:latest
         imagePullPolicy: Always
+        
+        # 🎯 SỬA 1: Ép chạy trực tiếp bằng node để triệt tiêu nodemon, giúp nạp biến NODE_OPTIONS sạch 100%
+        command: ["node"]
+        args: ["src/index.js"]
+        
         ports:
         - containerPort: 5000
         env:
+        # 🎯 SỬA 2: XÓA BỎ các biến OTEL_EXPORTER thủ công trỏ về Tempo cũ.
+        # Hãy để OpenTelemetry Operator tự động gài các biến trỏ sang OTel Collector theo đúng file otel-instrumentation.yaml
         - name: OTEL_SERVICE_NAME
           value: "backend-app"
-        - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: "http://tempo.monitoring.svc.cluster.local:4318"
-        - name: OTEL_EXPORTER_OTLP_PROTOCOL
-          value: "http/protobuf"
+        
+        # Giữ nguyên cấu hình kết nối Database nghiệp vụ của bạn
         - name: DB_HOST
           value: "mysql-svc"
         - name: DB_USER
